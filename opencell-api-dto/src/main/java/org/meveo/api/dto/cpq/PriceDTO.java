@@ -1,0 +1,390 @@
+/*
+ * (C) Copyright 2015-2020 Opencell SAS (https://opencellsoft.com/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
+ * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ *
+ * THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+ * OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM "AS
+ * IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO
+ * THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE,
+ * YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
+ *
+ * For more information on the GNU Affero General Public License, please consult
+ * <https://www.gnu.org/licenses/agpl-3.0.en.html>.
+ */
+
+package org.meveo.api.dto.cpq;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CustomFieldsDto;
+import org.meveo.model.billing.TradingCurrency;
+import org.meveo.model.catalog.DiscountPlanItemTypeEnum;
+import org.meveo.model.catalog.RecurringChargeTemplate;
+import org.meveo.model.cpq.enums.PriceTypeEnum;
+import org.meveo.model.quote.QuotePrice;
+import org.meveo.model.tax.TaxCategory;
+import org.meveo.model.tax.TaxClass;
+
+/**
+ * The Class AccountingArticlePrices.
+ *
+ * @author Rachid.AIT
+ * @lastModifiedVersion 11.0.0
+ */
+@XmlRootElement(name = "PriceDTO")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class PriceDTO extends BaseEntityDto {
+
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = -1054495149414405858L;
+
+	
+	@XmlAttribute
+	private PriceTypeEnum priceType;
+
+    private BigDecimal amountWithTax;
+    
+    private BigDecimal unitPriceWithoutTax;
+
+    private BigDecimal amountWithoutTax;
+    
+    private BigDecimal amountWithoutTaxWithoutDiscount;
+
+    private BigDecimal taxAmount;
+    
+    private BigDecimal taxRate;
+
+	private String taxIndex;
+    
+    private Boolean priceOverCharged;
+
+    private String currencyCode;
+
+	private String currencySymbol;
+    
+    private Long recurrenceDuration;
+    private String recurrencePeriodicity;
+    private String chargeCode;
+    private String chargeLabel;
+	private int unitNbDecimal;
+	private String calendarType;
+	private String calendarCode;
+    
+    private String taxCategory;
+    private String taxCode;
+    private BigDecimal quantity;
+    private PriceDTO discountedQuotePrice;
+    
+    private BigDecimal unitMultiplicator;
+    private BigDecimal discountValue;
+    private DiscountPlanItemTypeEnum discountPlanType;
+    private String discountPlanItemCode;
+    private Boolean applyDiscountsOnOverridenPrice;
+    private BigDecimal overchargedUnitAmountWithoutTax;
+    private BigDecimal discountedAmount;
+    private Integer sequence;
+    private Long id;
+    
+    private CustomFieldsDto customFields;
+    
+    
+	public PriceDTO(QuotePrice quotePrice, Map<String, TaxDTO> mapTaxIndexes) {
+		super();
+		id=quotePrice.getId();
+		priceType=quotePrice.getPriceTypeEnum();
+	    unitPriceWithoutTax=quotePrice.getUnitPriceWithoutTax();
+	    taxAmount=quotePrice.getTaxAmount();
+	    taxRate=quotePrice.getTaxRate();
+		TaxDTO taxDto = mapTaxIndexes.get(taxRate.toString());
+		if (taxDto!=null) {
+			taxIndex = taxDto.getIndex();
+		}
+	    priceOverCharged=quotePrice.getPriceOverCharged();
+	    currencyCode=quotePrice.getCurrencyCode();
+	    recurrenceDuration=quotePrice.getRecurrenceDuration();
+	    recurrencePeriodicity=quotePrice.getRecurrencePeriodicity();
+		amountWithTax=quotePrice.getAmountWithTax();
+		amountWithoutTax=quotePrice.getAmountWithoutTax();
+		amountWithoutTaxWithoutDiscount=quotePrice.getAmountWithoutTaxWithoutDiscount();
+		
+	    chargeCode=quotePrice.getChargeTemplate()!=null?quotePrice.getChargeTemplate().getCode():null;
+	    chargeLabel=quotePrice.getChargeTemplate()!=null?quotePrice.getChargeTemplate().getDescription():null;
+		if (quotePrice.getChargeTemplate() != null && quotePrice.getChargeTemplate() instanceof RecurringChargeTemplate) {
+			RecurringChargeTemplate recurringCharge = (RecurringChargeTemplate) quotePrice.getChargeTemplate();
+			unitNbDecimal = recurringCharge.getUnitNbDecimal();
+			calendarCode = recurringCharge.getCalendar().getCode();
+			calendarType = recurringCharge.getCalendar().getCalendarType();
+		}
+	   TaxCategory taxCategoryEntity = quotePrice.getQuoteArticleLine() != null ? quotePrice.getQuoteArticleLine().getBillableAccount().getTaxCategory()!=null ? quotePrice.getQuoteArticleLine().getBillableAccount().getTaxCategory(): 
+	    	quotePrice.getQuoteArticleLine().getBillableAccount().getCustomerAccount().getCustomer().getCustomerCategory().getTaxCategory() : null;
+	   taxCategory=taxCategoryEntity!=null?taxCategoryEntity.getCode():null;
+	   TaxClass taxClass=quotePrice.getQuoteArticleLine() != null ? quotePrice.getQuoteArticleLine().getAccountingArticle().getTaxClass() : null;
+	   taxCode=taxClass!=null?taxClass.getCode():null;
+	   quantity = quotePrice.getQuantity();
+	   unitMultiplicator=quotePrice.getChargeTemplate()!=null?quotePrice.getChargeTemplate().getUnitMultiplicator():null;
+	   if(quotePrice.getDiscountedQuotePrice() != null) {
+		   discountedQuotePrice = new PriceDTO(quotePrice.getDiscountedQuotePrice(), mapTaxIndexes);
+	   }
+	   discountPlanItemCode=quotePrice.getDiscountPlanItem()!=null?quotePrice.getDiscountPlanItem().getCode():null;
+	   discountPlanType=quotePrice.getDiscountPlanType();
+	   discountValue=quotePrice.getDiscountValue();
+	   applyDiscountsOnOverridenPrice=quotePrice.getApplyDiscountsOnOverridenPrice();
+	   overchargedUnitAmountWithoutTax=quotePrice.getOverchargedUnitAmountWithoutTax();
+	   discountedAmount=quotePrice.getDiscountedAmount();
+	   sequence=quotePrice.getSequence();
+		
+	}
+
+	public PriceDTO(QuotePrice quotePrice, TradingCurrency currency, Map<String, TaxDTO> mapTaxIndexes) {
+		this(quotePrice, mapTaxIndexes);
+		this.setCurrencySymbol(currency.getSymbol());
+	}
+
+	public PriceDTO(QuotePrice quotePrice,CustomFieldsDto customFields, Map<String, TaxDTO> mapTaxIndexes) {
+		this(quotePrice, mapTaxIndexes);
+		this.customFields = customFields;
+	}
+	
+	
+	
+	public PriceDTO() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	public PriceTypeEnum getPriceType() {
+		return priceType;
+	}
+	public void setPriceType(PriceTypeEnum priceType) {
+		this.priceType = priceType;
+	}
+	public BigDecimal getAmountWithTax() { return amountWithTax; }
+	public void setAmountWithTax(BigDecimal amountWithTax) { this.amountWithTax = amountWithTax; }
+	public BigDecimal getAmountWithoutTax() {
+		return amountWithoutTax;
+	}
+	public void setAmountWithoutTax(BigDecimal amountWithoutTax) {
+		this.amountWithoutTax = amountWithoutTax;
+	}
+	public BigDecimal getTaxAmount() {
+		return taxAmount;
+	}
+	public void setTaxAmount(BigDecimal taxAmount) {
+		this.taxAmount = taxAmount;
+	}
+	public BigDecimal getTaxRate() {
+		return taxRate;
+	}
+	public void setTaxRate(BigDecimal taxRate) {
+		this.taxRate = taxRate;
+	}
+	public String getCurrencyCode() {
+		return currencyCode;
+	}
+	public void setCurrencyCode(String currencyCode) {
+		this.currencyCode = currencyCode;
+	}
+	public Long getRecurrenceDuration() {
+		return recurrenceDuration;
+	}
+	public void setRecurrenceDuration(Long recurrenceDuration) {
+		this.recurrenceDuration = recurrenceDuration;
+	}
+	public String getRecurrencePeriodicity() {
+		return recurrencePeriodicity;
+	}
+	public void setRecurrencePeriodicity(String recurrencePeriodicity) {
+		this.recurrencePeriodicity = recurrencePeriodicity;
+	}
+	public BigDecimal getUnitPriceWithoutTax() {
+		return unitPriceWithoutTax;
+	}
+	public void setUnitPriceWithoutTax(BigDecimal unitPriceWithoutTax) {
+		this.unitPriceWithoutTax = unitPriceWithoutTax;
+	}
+	public BigDecimal getAmountWithoutTaxWithoutDiscount() {
+		return amountWithoutTaxWithoutDiscount;
+	}
+	public void setAmountWithoutTaxWithoutDiscount(BigDecimal amountWithoutTaxWithDiscount) {
+		this.amountWithoutTaxWithoutDiscount = amountWithoutTaxWithDiscount;
+	}
+	/**
+	 * @return the priceOverCharged
+	 */
+	public Boolean getPriceOverCharged() {
+		return priceOverCharged;
+	}
+	/**
+	 * @param priceOverCharged the priceOverCharged to set
+	 */
+	public void setPriceOverCharged(Boolean priceOverCharged) {
+		this.priceOverCharged = priceOverCharged;
+	}
+
+	/**
+	 * @return the chargeCode
+	 */
+	public String getChargeCode() {
+		return chargeCode;
+	}
+
+	/**
+	 * @param chargeCode the chargeCode to set
+	 */
+	public void setChargeCode(String chargeCode) {
+		this.chargeCode = chargeCode;
+	}
+
+	/**
+	 * @return the chargeLabel
+	 */
+	public String getChargeLabel() {
+		return chargeLabel;
+	}
+
+	/**
+	 * @param chargeLabel the chargeLabel to set
+	 */
+	public void setChargeLabel(String chargeLabel) {
+		this.chargeLabel = chargeLabel;
+	}
+
+	public String getTaxCategory() {
+		return taxCategory;
+	}
+
+	public void setTaxCategory(String taxCategory) {
+		this.taxCategory = taxCategory;
+	}
+
+	public String getTaxCode() {
+		return taxCode;
+	}
+
+	public void setTaxCode(String taxCode) {
+		this.taxCode = taxCode;
+	}
+	public CustomFieldsDto getCustomFields() {
+		return customFields;
+	}
+	public void setCustomFields(CustomFieldsDto customFields) {
+		this.customFields = customFields;
+	}
+	public BigDecimal getQuantity() {
+		return quantity;
+	}
+	public void setQuantity(BigDecimal quantity) {
+		this.quantity = quantity;
+	}
+	public PriceDTO getDiscountedQuotePrice() {
+		return discountedQuotePrice;
+	}
+	public void setDiscountedQuotePrice(PriceDTO discountedQuotePrice) {
+		this.discountedQuotePrice = discountedQuotePrice;
+	}
+	public BigDecimal getUnitMultiplicator() {
+		return unitMultiplicator;
+	}
+	public void setUnitMultiplicator(BigDecimal unitMultiplicator) {
+		this.unitMultiplicator = unitMultiplicator;
+	}
+	public BigDecimal getDiscountValue() {
+		return discountValue;
+	}
+	public void setDiscountValue(BigDecimal discountValue) {
+		this.discountValue = discountValue;
+	}
+	public DiscountPlanItemTypeEnum getDiscountPlanType() {
+		return discountPlanType;
+	}
+	public void setDiscountPlanType(DiscountPlanItemTypeEnum discountPlanType) {
+		this.discountPlanType = discountPlanType;
+	}
+	public String getDiscountPlanItemCode() {
+		return discountPlanItemCode;
+	}
+	public void setDiscountPlanItemCode(String discountPlanItemCode) {
+		this.discountPlanItemCode = discountPlanItemCode;
+	}
+	public Boolean getApplyDiscountsOnOverridenPrice() {
+		return applyDiscountsOnOverridenPrice;
+	}
+	public void setApplyDiscountsOnOverridenPrice(Boolean applyDiscountsOnOverridenPrice) {
+		this.applyDiscountsOnOverridenPrice = applyDiscountsOnOverridenPrice;
+	}
+	public BigDecimal getOverchargedUnitAmountWithoutTax() {
+		return overchargedUnitAmountWithoutTax;
+	}
+	public void setOverchargedUnitAmountWithoutTax(BigDecimal overchargedUnitAmountWithoutTax) {
+		this.overchargedUnitAmountWithoutTax = overchargedUnitAmountWithoutTax;
+	}
+	public Long getId() {
+		return id;
+	}
+	public void setId(Long id) {
+		this.id = id;
+	}
+	public BigDecimal getDiscountedAmount() {
+		return discountedAmount;
+	}
+	public void setDiscountedAmount(BigDecimal discountedAmount) {
+		this.discountedAmount = discountedAmount;
+	}
+	public Integer getSequence() {
+		return sequence;
+	}
+	public void setSequence(Integer sequence) {
+		this.sequence = sequence;
+	}
+
+	public String getCurrencySymbol() {
+		return currencySymbol;
+	}
+
+	public void setCurrencySymbol(String currencySymbol) {
+		this.currencySymbol = currencySymbol;
+	}
+
+	public String getTaxIndex() {
+		return taxIndex;
+	}
+
+	public void setTaxIndex(String taxIndex) {
+		this.taxIndex = taxIndex;
+	}
+
+	public int getUnitNbDecimal() {
+		return unitNbDecimal;
+	}
+
+	public void setUnitNbDecimal(int unitNbDecimal) {
+		this.unitNbDecimal = unitNbDecimal;
+	}
+
+	public String getCalendarType() {
+		return calendarType;
+	}
+
+	public void setCalendarType(String calendarType) {
+		this.calendarType = calendarType;
+	}
+
+	public String getCalendarCode() {
+		return calendarCode;
+	}
+
+	public void setCalendarCode(String calendarCode) {
+		this.calendarCode = calendarCode;
+	}
+}

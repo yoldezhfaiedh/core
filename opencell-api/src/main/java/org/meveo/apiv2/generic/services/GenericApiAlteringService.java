@@ -1,0 +1,365 @@
+package org.meveo.apiv2.generic.services;
+
+import static org.meveo.apiv2.generic.ValidationUtils.checkDto;
+import static org.meveo.apiv2.generic.ValidationUtils.checkId;
+
+import java.lang.reflect.Field;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.Entity;
+import javax.persistence.criteria.JoinType;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.NotFoundException;
+
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.hibernate.collection.internal.PersistentBag;
+import org.hibernate.collection.internal.PersistentSet;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.api.BaseApi;
+import org.meveo.api.TaxApi;
+import org.meveo.api.dto.CustomFieldDto;
+import org.meveo.api.dto.CustomFieldValueDto;
+import org.meveo.api.dto.CustomFieldsDto;
+import org.meveo.api.dto.EntityReferenceDto;
+import org.meveo.api.dto.response.PagingAndFiltering;
+import org.meveo.apiv2.generic.core.GenericHelper;
+import org.meveo.apiv2.generic.core.mapper.JsonGenericMapper;
+import org.meveo.commons.utils.EjbUtils;
+import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.jpa.EntityManagerWrapper;
+import org.meveo.jpa.MeveoJpa;
+import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.IEntity;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@Stateless
+public class GenericApiAlteringService {
+
+    private static final Logger logger = LoggerFactory.getLogger(GenericApiAlteringService.class);
+    private List<String> forbiddenFieldsToUpdate = new ArrayList<>(Arrays.asList("id", "uuid", "auditable"));
+    private BaseApi baseApi = (BaseApi) EjbUtils.getServiceInterface(TaxApi.class.getSimpleName());
+
+    @Inject
+    private GenericApiPersistenceDelegate persistenceDelegate;
+
+    @Inject
+    private GenericApiLoadService genericApiLoadService;
+
+    @Inject
+    @MeveoJpa
+    private EntityManagerWrapper entityManagerWrapper;
+
+    public String update(String entityName, Long id, String jsonDto) {
+        checkId(id).checkDto(jsonDto);
+        Class entityClass = GenericHelper.getEntityClass(entityName);
+        IEntity iEntity = PersistenceServiceHelper.getPersistenceService(entityClass).findById(id);
+
+        if (iEntity == null) {
+            throw new NotFoundException("entity " + entityName + " with id " + id + " not found.");
+        }
+        JsonGenericMapper jsonGenericMapper = JsonGenericMapper.Builder.getBuilder().build();
+        refreshEntityWithDotFields(jsonGenericMapper.readValue(jsonDto, Map.class), iEntity, jsonGenericMapper.parseFromJson(jsonDto, iEntity.getClass()));
+        IEntity updatedEntity = persistenceDelegate.update(entityClass, iEntity);
+        return jsonGenericMapper.toJson(null, entityClass, updatedEntity, null);
+    }
+
+
+    public Optional<Long> create(String entityName, String jsonDto) {
+        checkDto(jsonDto);
+        Class entityClass = GenericHelper.getEntityClass(entityName);
+        IEntity entityToCreate = JsonGenericMapper.Builder
+                .getBuilder().build().parseFromJson(jsonDto, entityClass);
+        refreshEntityWithDotFields(JsonGenericMapper.Builder.getBuilder().build().readValue(jsonDto, Map.class), entityToCreate, entityToCreate);
+        persistenceDelegate.create(entityClass, entityToCreate);
+        return Optional.ofNullable((Long) entityToCreate.getId());
+    }
+
+    public String delete(String entityName, Long id) {
+        checkId(id);
+        Class entityClass = GenericHelper.getEntityClass(entityName);
+        IEntity iEntity = PersistenceServiceHelper.getPersistenceService(entityClass).findById(id);
+        if (iEntity == null) {
+            throw new NotFoundException("entity " + entityName + " with id " + id + " not found.");
+        }
+        persistenceDelegate.remove(entityClass, iEntity);
+        return JsonGenericMapper.Builder.getBuilder().withNestedEntities(null).build().toJson(null, entityClass, iEntity, null);
+    }
+
+    public void refreshEntityWithDotFields(Map<String, Object> readValueMap, Object fetchedEntity, Object parsedEntity) {
+        readValueMap.keySet().forEach(key -> {
+            if (!forbiddenFieldsToUpdate.contains(key))
+                FetchOrSetField(key, readValueMap, parsedEntity, fetchedEntity);
+        });
+    }
+
+    public int massUpdate(String updatedEntityName, String filteredEntityName, Map<String, Object> updatedFields, Map<String, Object> filters) {
+        Class<?> updatedEntityClass = GenericHelper.getEntityClass(updatedEntityName);
+        Class<?> filteredEntityClass = GenericHelper.getEntityClass(filteredEntityName);
+
+        PaginationConfiguration paginationConfiguration = new PaginationConfiguration("id", PagingAndFiltering.SortOrder.ASCENDING);
+        paginationConfiguration.setFilters(filters);
+        paginationConfiguration.setFetchFields(new ArrayList<>());
+        paginationConfiguration.getFetchFields().add("id");
+        // Prepare filter filterQuery
+        paginationConfiguration.setJoinType(JoinType.LEFT);
+        String filterQuery = genericApiLoadService.findAggregatedPaginatedRecordsAsString(filteredEntityClass, " a.ratedTransaction rt ", paginationConfiguration);
+
+        // Build update filterQuery
+        StringBuilder updateQuery = new StringBuilder("UPDATE ").append(updatedEntityClass.getName()).append(" a SET");
+        updatedFields.forEach((s, o) ->
+            updateQuery.append(" a.").append(s).append("=").append(QueryBuilder.paramToString(o)).append(",")
+        );
+        updateQuery.setLength(updateQuery.length() - 1);
+        updateQuery.append(" WHERE a.id in (").append(filterQuery).append(")");
+
+        return entityManagerWrapper.getEntityManager().createQuery(updateQuery.toString()).executeUpdate();
+
+    }
+
+    private void FetchOrSetField(String fieldName, Map<String, Object> readValueMap, Object parsedEntity, Object fetchedEntity) {
+        if ("cfValues".equalsIgnoreCase(fieldName)) {
+            CustomFieldTemplateService customFieldTemplateService = (CustomFieldTemplateService) PersistenceServiceHelper.getPersistenceService(CustomFieldTemplate.class);
+            Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo((ICustomFieldEntity) parsedEntity);
+            if (customFieldTemplates != null) {
+                CustomFieldsDto customFieldsDto = getCustomFieldsDto(readValueMap, customFieldTemplates);
+                baseApi.populateCustomFieldsForGenericApi(customFieldsDto, (ICustomFieldEntity) fetchedEntity, false);
+            }
+        } else {
+            Field updatedField = FieldUtils.getField(parsedEntity.getClass(), fieldName, true);
+            if (updatedField != null) {
+                try {
+                    Object newValue = updatedField.get(parsedEntity);
+                    if(updatedField.getType().isAssignableFrom(List.class)){
+                        newValue = getReadyToBeSavedListEntities(fetchedEntity, updatedField, (List<? extends IEntity>) newValue);
+                    } else if(updatedField.getType().isAssignableFrom(Set.class)){
+                        newValue = getReadyToBeSavedListEntities(fetchedEntity, updatedField, (Set<? extends IEntity>) newValue);
+                    } else if(updatedField.getType().isAnnotationPresent(Entity.class)){
+                        newValue = fetchEntityById(updatedField.getType(), ((IEntity) newValue).getId());
+                    }
+                    else if(readValueMap.get(fieldName) instanceof Map) {
+                        refreshEntityWithDotFields((Map<String, Object>) readValueMap.get(fieldName), newValue, newValue);
+                    }
+                    updatedField.set(fetchedEntity, newValue);
+                    //throw new IllegalArgumentException("a field name or value does not exist in " + parsedEntity.getClass());
+                } catch (IllegalAccessException e) {
+                    logger.error(String.format("Failed to update field %s", fieldName), e);
+                }
+            }
+        }
+    }
+
+    private Object fetchEntityById(Class<?> clazz, Object id) {
+        return id != null ? entityManagerWrapper.getEntityManager().getReference(clazz, id) : null;
+    }
+
+    private Object getReadyToBeSavedListEntities(Object fetchedEntity, Field updatedField, Collection<? extends IEntity> newValue) {
+        Stream<Object> listOfEntities = newValue
+                .stream()
+                .map(o -> fetchEntityById(getGenericClassName(updatedField.getGenericType().getTypeName()), o.getId()));
+        try {
+            final Object field = updatedField.get(fetchedEntity);
+            // handels orphans-delete-all-error
+            if(field instanceof PersistentBag){
+                PersistentBag list = (PersistentBag) field;
+                list.clear();
+                list.addAll(listOfEntities.collect(Collectors.toList()));
+                return list;
+            }
+            if(field instanceof PersistentSet){
+                PersistentSet set = (PersistentSet) field;
+                set.clear();
+                set.addAll(listOfEntities.collect(Collectors.toSet()));
+                return set;
+            }
+        } catch (IllegalAccessException e) {
+            logger.error("error = {}", e);
+        }
+        return newValue instanceof List ? listOfEntities.collect(Collectors.toList()) : listOfEntities.collect(Collectors.toSet());
+    }
+
+    private Class getGenericClassName(@NotNull String typeName) {
+        String className = typeName.substring(typeName.lastIndexOf(".") + 1, typeName.lastIndexOf(">"));
+        return GenericHelper.getEntityClass(className);
+    }
+
+    private CustomFieldsDto getCustomFieldsDto(Map<String, Object> readValueMap, Map<String, CustomFieldTemplate> customFieldTemplates) {
+        CustomFieldsDto customFieldsDto = new CustomFieldsDto();
+        Map<String, Object> cfsValuesByCode = (Map<String, Object>) ((Map)readValueMap.get("cfValues")).get("valuesByCode");
+        for(String code : cfsValuesByCode.keySet()){
+            CustomFieldTemplate cft = customFieldTemplates.get(code);
+            if(cft != null){
+                CustomFieldDto customFieldDto = new CustomFieldDto();
+                customFieldDto.setCode(code);
+                writeValueToCFDto(customFieldDto, cft.getFieldType(), cft.getStorageType(), cfsValuesByCode.get(code));
+                customFieldsDto.getCustomField().add(customFieldDto);
+                if(cfsValuesByCode.get(code) == null || ((List) cfsValuesByCode.get(code)).isEmpty() ){
+                    customFieldsDto.getCustomField().add(customFieldDto);
+                    continue;
+                }
+                if(cft.isVersionable()){
+                	for(Object newValue : ((List) cfsValuesByCode.get(code))) {
+                		customFieldDto = new CustomFieldDto();
+                        customFieldDto.setCode(code);
+                        
+	                    customFieldDto.setValuePeriodPriority((Integer) ((Map) newValue).get("priority"));
+	                    if(((Map) newValue).get("from") != null){
+	                        customFieldDto.setValuePeriodStartDate(resolveDate(((Map) newValue).get("from")));
+	                    }
+	                    if(((Map) newValue).get("to") != null){
+	                        customFieldDto.setValuePeriodEndDate(resolveDate(((Map) newValue).get("to")));
+	                    }
+	                    writeValueToCFDto(customFieldDto, cft.getFieldType(), cft.getStorageType(), Arrays.asList(newValue));
+	                    customFieldsDto.getCustomField().add(customFieldDto);
+	                }
+                } else {
+                	writeValueToCFDto(customFieldDto, cft.getFieldType(), cft.getStorageType(), cfsValuesByCode.get(code));
+                    customFieldsDto.getCustomField().add(customFieldDto);
+                }
+                
+            }
+        }
+        return customFieldsDto;
+    }
+
+    private void writeValueToCFDto(CustomFieldDto customFieldDto, CustomFieldTypeEnum fieldType, CustomFieldStorageTypeEnum storageType, Object value) {
+        Object effectiveValue = ((Map) ((List) value).get(0)).get("value");
+        switch (storageType){
+            case SINGLE:
+                writeSingleValueToCFDto(customFieldDto, fieldType, effectiveValue);
+                break;
+            case LIST:
+                customFieldDto.setListValue(new ArrayList<>());
+                List listValues = (List) effectiveValue;
+                if(effectiveValue == null){break;}
+                for(Object obj: listValues){
+                    CustomFieldValueDto customFieldValueDto = new CustomFieldValueDto();
+                    customFieldValueDto.setValue(getConvertedType(fieldType, obj));
+                    customFieldDto.getListValue().add(customFieldValueDto);
+                }
+                break;
+            case MAP:
+                Map<String, Object> mapValues = (Map) effectiveValue;
+                if(mapValues == null){break;}
+                customFieldDto.setMapValue(new LinkedHashMap<String, CustomFieldValueDto>());
+                for(String key: mapValues.keySet()){
+                    CustomFieldValueDto customFieldValueDto = new CustomFieldValueDto();
+                    customFieldValueDto.setValue(getConvertedType(fieldType, mapValues.get(key)));
+                    customFieldDto.getMapValue().put(key, customFieldValueDto);
+                }
+                break;
+            case MATRIX:
+                Map<Object, Object> matrixValues = (Map) effectiveValue;
+                if(matrixValues == null){break;}
+                customFieldDto.setMapValue(new LinkedHashMap<String, CustomFieldValueDto>());
+                for(Object key: matrixValues.keySet()){
+                    CustomFieldValueDto customFieldValueDto = new CustomFieldValueDto();
+                    customFieldValueDto.setValue(getConvertedType(fieldType, matrixValues.get(key)));
+                    customFieldDto.getMapValue().put(key.toString(), customFieldValueDto);
+                }
+                break;
+        }
+    }
+
+    private void writeSingleValueToCFDto(CustomFieldDto customFieldDto, CustomFieldTypeEnum fieldType, Object value) {
+        switch (fieldType) {
+        case DATE:
+            customFieldDto.setDateValue(value == null ? null : new Date((Long) value));
+            break;
+        case LONG:
+            customFieldDto.setLongValue(value == null ? null : Integer.toUnsignedLong((Integer) value));
+            break;
+        case DOUBLE:
+            customFieldDto.setDoubleValue(value == null ? null : Double.parseDouble(value.toString()));
+            break;
+        case BOOLEAN:
+            customFieldDto.setBooleanValue((Boolean) value);
+            break;
+        case CHILD_ENTITY:
+        case ENTITY:
+            if (value == null) {
+                customFieldDto.setEntityReferenceValue(null);
+            } else {
+                Map<String, String> entityRefDto = (Map<String, String>) value;
+                EntityReferenceDto entityReferenceDto = new EntityReferenceDto();
+                entityReferenceDto.setClassname(entityRefDto.get("classname"));
+                entityReferenceDto.setCode(entityRefDto.get("code"));
+                customFieldDto.setEntityReferenceValue(entityReferenceDto);
+                break;
+            }
+            case LIST:
+            	if(value == null) {
+            		customFieldDto.setStringValue(null);
+            		break;
+            	}
+                if(!((List)value).isEmpty()){
+                    customFieldDto.setStringValue((String)  ((Map)((List)value).get(0)).get("value"));
+                }
+                break;
+            default:
+            	if(value == null) {
+            		customFieldDto.setStringValue(null);
+            		break;
+            	}
+                customFieldDto.setStringValue((String) value);
+                break;
+        }
+    }
+
+    private Object getConvertedType(CustomFieldTypeEnum fieldType, Object value) {
+        switch (fieldType){
+        case DATE:
+            return new Date((Long) value);
+        case ENTITY:
+            Map<String, String> entityRefDto = (Map<String, String>) value;
+            EntityReferenceDto entityReferenceDto = new EntityReferenceDto();
+            entityReferenceDto.setClassname(entityRefDto.get("classname"));
+            entityReferenceDto.setCode(entityRefDto.get("code"));
+            return entityReferenceDto;
+        default:
+            return value;
+        }
+    }
+
+    public void addForbiddenFieldsToUpdate(List<String> fields) {
+        if (forbiddenFieldsToUpdate == null) {
+            forbiddenFieldsToUpdate = new ArrayList<>();
+        }
+        for (String field : fields) {
+            if (!forbiddenFieldsToUpdate.contains(field)) {
+                forbiddenFieldsToUpdate.add(field);
+            }
+        }
+
+    }
+    
+    private Date resolveDate(Object stringDate) {
+        if(stringDate instanceof String) {
+            try {
+                return ((String) stringDate).matches("^\\d{4}-\\d{1,2}-\\d{1,2}.*$") ? new SimpleDateFormat("yyyy-MM-dd").parse(String.valueOf(stringDate)) : new SimpleDateFormat("dd/MM/yyyy").parse(String.valueOf(stringDate));
+            } catch (ParseException e) {
+                throw new IllegalArgumentException(stringDate + " is not a valid value format, hint : dd/MM/yyyy or yyyy-MM-dd");
+            }
+        }
+        return new Date((Long) stringDate);
+    }
+
+}

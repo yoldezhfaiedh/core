@@ -1,0 +1,119 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:hftl="http://hftl.org" xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="objectId" value="#{invoiceTypeBean.objectId}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+        <hftl:entityPopup id="searchOccTemplatePopup" header="#{messages['invoiceType.occTemplate']}" updateField=":formInvoiceType:occTemplateSelectedId :formInvoiceType:occTemplateSelectedId_text"
+            selection="#{invoiceTypeBean.entity.occTemplate}" backingBean="#{occTemplateBean}" searchField1Label="#{messages['businessEntity.code']}" searchField1="code"
+            column1Label="#{messages['businessEntity.code']}" column1="code" column2Label="#{messages['businessEntity.description']}" column2="description">
+        </hftl:entityPopup>
+        <hftl:entityPopup id="searchOccTemplateNegativePopup" header="#{messages['invoiceType.occTemplate']}"
+            updateField=":formInvoiceType:occTemplateNegativeSelectedId :formInvoiceType:occTemplateNegativeSelectedId_text" selection="#{invoiceTypeBean.entity.occTemplateNegative}"
+            backingBean="#{occTemplateBean}" searchField1Label="#{messages['businessEntity.code']}" searchField1="code" column1Label="#{messages['businessEntity.code']}" column1="code"
+            column2Label="#{messages['businessEntity.description']}" column2="description">
+        </hftl:entityPopup>
+        <hftl:entityPopup id="searchInvoiceSequencePopup" header="#{messages['invoiceType.invoiceSequence']}"
+            updateField=":formInvoiceType:invoiceSequenceSelectedId :formInvoiceType:invoiceSequenceSelectedId_text" selection="#{invoiceTypeBean.entity.invoiceSequence}"
+            backingBean="#{invoiceSequenceBean}" searchField1Label="#{messages['businessEntity.code']}" searchField1="code" column1Label="#{messages['businessEntity.code']}" column1="code"
+            column2Label="#{messages['businessEntity.description']}" column2="description">
+        </hftl:entityPopup>
+        
+        <hftl:entityPopup id="searchInvoiceCodeTypePopup" header="#{messages['invoiceType.invoiceCodeType']}" updateField=":formInvoiceType:invoiceCodeTypeSelectedId :formInvoiceType:invoiceCodeTypeSelectedId_text"
+            selection="#{invoiceTypeBean.entity.untdidInvoiceCodeType}" backingBean="#{invoiceCodeTypeBean}" searchField1Label="#{messages['businessEntity.code']}" searchField1="code"
+            column1Label="#{messages['businessEntity.code']}" column1="code" column2Label="#{messages['invoiceType.invoiceCodeType.codeName']}" column2="name">
+        </hftl:entityPopup>     
+        <hftl:entityPopup id="searchInvoiceSubjectCodePopup" header="#{messages['invoiceType.invoiceSubjectCode']}" updateField=":formInvoiceType:invoiceSubjectCodeSelectedId :formInvoiceType:invoiceSubjectCodeSelectedId_text"
+            selection="#{invoiceTypeBean.entity.invoiceSubjectCode}" backingBean="#{invoiceSubjectCodeBean}" searchField1Label="#{messages['businessEntity.code']}" searchField1="code"
+            column1Label="#{messages['businessEntity.code']}" column1="code" column2Label="#{messages['invoiceType.invoiceSubjectCode.codeName']}" column2="codeName">
+        </hftl:entityPopup>       
+        
+        <hftl:entityPopup id="invoiceTypeScriptPopup" header="#{messages['scriptInstance.popup.header']}"
+            updateField=":formInvoiceType:customInvoiceXmlScriptId :formInvoiceType:customInvoiceXmlScriptId_text" selection="#{invoiceTypeBean.entity.customInvoiceXmlScriptInstance}"
+            backingBean="#{scriptInstanceBean}" searchField1Label="#{messages['businessEntity.code']}" searchField1="code" column1Label="#{messages['businessEntity.code']}" column1="code"
+            column2Label="#{messages['businessEntity.description']}" column2="description">
+        </hftl:entityPopup>
+        <hftl:entityPopup id="invoiceValidationScriptPopup" header="#{messages['scriptInstance.popup.header']}"
+            updateField=":formInvoiceType:invoiceValidationScriptId" selection="#{invoiceTypeBean.entity.invoiceValidationScript}"
+            backingBean="#{scriptInstanceBean}" searchField1Label="#{messages['businessEntity.code']}" searchField1="code" column1Label="#{messages['businessEntity.code']}" column1="code"
+            column2Label="#{messages['businessEntity.description']}" column2="description">
+        </hftl:entityPopup>
+        <hftl:entityPopup id="searchEmailTemplatePopup" header="#{messages['emailTemplate']}"
+                          updateField=":formInvoiceType:emailTemplateId :formInvoiceType:emailTemplateId_text"
+                          selection="#{invoiceTypeBean.entity.emailTemplate}"
+                          backingBean="#{emailTemplateBean}" searchField1Label="#{messages['businessEntity.code']}" searchField1="code"
+                          column1Label="#{messages['businessEntity.code']}" column1="code"
+                          column2Label="#{messages['businessEntity.description']}" column2="description">
+        </hftl:entityPopup>
+        <h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
+                <p:menuitem outcome="invoiceTypes" value="#{messages['menu.invoiceTypes']}" />
+                <p:menuitem value="#{messages['commons.new']} #{messages['invoiceType']}" disabled="true" rendered="#{invoiceTypeBean.entity.transient}" />
+                <p:menuitem value="#{messages['invoiceType']} - #{invoiceTypeBean.entity.code}" disabled="true" rendered="#{!invoiceTypeBean.entity.transient}" />
+            </p:breadCrumb>
+        </h:form>
+
+        <hftl:formPanel formId="formInvoiceType" edit="#{invoiceTypeBean.edit}" label="#{messages['invoiceType.panel']}" backingBean="#{invoiceTypeBean}">
+            <hftl:formField label="#{messages['businessEntity.code']}" field="code" validateUnique="true" required="true" />
+            <hftl:formField label="#{messages['businessEntity.description']}" id="description" field="description" />
+            <hftl:formField label="#{messages['invoiceType.useSelfSequence']}" field="useSelfSequence"  />
+            <hftl:formField label="#{messages['invoiceType.occTemplate']}" id="occTemplateSelectedId" field="occTemplate" valueLabelField="code" popup="true" popupId="searchOccTemplatePopup"
+                required="true" />
+            <hftl:formField label="#{messages['invoiceType.occTemplateNegative']}" id="occTemplateNegativeSelectedId" field="occTemplateNegative" valueLabelField="code" popup="true"
+                popupId="searchOccTemplateNegativePopup" showResetButton="true" required="false" />
+            <hftl:formField label="#{messages['invoiceType.billingTemplateName']}" field="billingTemplateName" required="false" />
+            <hftl:formField label="#{messages['invoiceType.billingTemplateNameEL']}" field="billingTemplateNameEL" />
+            <hftl:formField id="customInvoiceXmlScriptId" label="#{messages['invoiceType.customInvoiceXmlScript']}" field="customInvoiceXmlScriptInstance" valueLabelField="code" required="false" popup="true" popupId="invoiceTypeScriptPopup" showResetButton="true" />
+            
+            <hftl:formField id="invoiceValidationScriptId" label="#{messages['invoiceType.invoiceValidationScript']}" field="invoiceValidationScript" valueLabelField="code" required="false" popup="true" popupId="invoiceValidationScriptPopup" showResetButton="true" />
+            
+            <hftl:formField label="#{messages['invoiceType.invoiceAccountable']}" field="invoiceAccountable" />
+            <hftl:formField label="#{messages['invoiceType.prefix']}" field="prefixEL" id="prefix" textArea="true" rows="1" maxlength="2000" />
+            <hftl:formField label="#{messages['invoiceType.invoiceSequence']}" id="invoiceSequenceSelectedId" field="invoiceSequence" valueLabelField="code" popup="true" popupId="searchInvoiceSequencePopup"
+                required="true" />
+            
+            <hftl:formField label="#{messages['invoiceType.invoiceSubjectCode']}" id="invoiceSubjectCodeSelectedId" field="invoiceSubjectCode" valueLabelField="codeName" popup="true" popupId="searchInvoiceSubjectCodePopup"
+                required="false" />
+			<hftl:formField label="#{messages['invoiceType.invoiceCodeType']}" id="invoiceCodeTypeSelectedId" field="untdidInvoiceCodeType" valueLabelField="name" popup="true" popupId="searchInvoiceCodeTypePopup"
+                required="false" />  
+                  
+            <hftl:formField label="#{messages['invoice.mailingType']}" listenerUpdate="emailTemplateId" field="mailingType" disabled="false" noSelectionLabel="false"/>
+            <hftl:formField id="emailTemplateId" required="#{invoiceTypeBean.entity.mailingType!=null}" label="#{messages['emailTemplate']}" field="emailTemplate"
+                            valueLabelField="code" popup="true"
+                            popupId="searchEmailTemplatePopup"/>
+            <hftl:formField label="#{messages['invoiceType.excludeFromAgedTrialBalance']}" field="excludeFromAgedTrialBalance"  />
+            <hftl:formField label="#{messages['invoiceType.appliesTo']}" field="appliesTo" listType="pickUpList" valueLabelField="code" dualListModel="#{invoiceTypeBean.dualListModel}" newLine="true"
+                id="appliesTo" />
+            <hftl:formField label="#{messages['invoiceType.pdfFilenameEl']}" field="pdfFilenameEL" textArea="true" rows="1" maxlength="2000" />
+            <hftl:formField label="#{messages['invoiceType.xmlFilenameEl']}" field="xmlFilenameEL" textArea="true" rows="1" maxlength="2000" />
+            
+            <hftl:formField label="#{messages['invoiceType.occTemplateEL']}" field="occTemplateCodeEl" textArea="true" rows="1" maxlength="2000" />
+            <hftl:formField label="#{messages['invoiceType.occTemplateNegativeEL']}" field="occTemplateNegativeCodeEl" textArea="true" rows="1" maxlength="2000" />
+
+
+            <h:panelGroup rendered="#{not empty invoiceTypeBean.entity.id}">
+                <p:dataTable id="sellerSequenceTable" width="80px;" label="#{messages['inboundRequest.responseHeaders']}" style="width:70%;" value="#{invoiceTypeBean.entity.sellerSequence}"
+                    var="sellerSeq" paginator="false" resizableColumns="true">
+                    <f:facet name="header">#{messages['invoiceType.sellerSequences']}</f:facet>
+                    <p:column headerText="#{messages['seller.title']}">
+                        <h:outputText value="#{sellerSeq.seller.code}" />
+                    </p:column>
+                    <p:column headerText="#{messages['seller.invoiceSequence']}">
+                        <h:outputText value="#{sellerSeq.invoiceSequence.descriptionAndCode}" />
+                    </p:column>
+                    <p:column headerText="#{messages['invoiceType.sequence.prefixEl']}">
+                        <h:outputText value="#{sellerSeq.prefixEL}" />
+                    </p:column>
+                </p:dataTable>
+            </h:panelGroup>
+            
+            <hftl:customFields backingBean="#{invoiceTypeBean}" messagesId="formInvoiceType:messages" />
+        </hftl:formPanel>
+        
+    </ui:define>
+</ui:composition>

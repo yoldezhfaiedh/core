@@ -1,0 +1,190 @@
+	<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:hftl="http://hftl.org" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="tab" value="#{providerBean.activeTab}" />
+            <f:event type="preRenderView" listener="#{providerBean.preRenderView}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+    	<h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
+                <p:menuitem value="#{messages['menu.appConfiguration']}" disabled="true" />
+            </p:breadCrumb>
+        </h:form>
+        
+        <hftl:entityPopup id="genericAccountingPopup" header="#{messages['defaultArticleConfiguration.genericAccounting']}" updateField=":providerFormId:tabView:genericAccountingId :providerFormId:tabView:genericAccountingId_text"
+	            selection="#{providerBean.entity.invoiceConfiguration.defaultGenericAccountingArticle}" backingBean="#{accountingArticleBean}"
+	            searchField1Label="#{messages['businessEntity.code']}" searchField1="code" column1Label="#{messages['businessEntity.code']}" column1="code"
+	            column2Label="#{messages['businessEntity.description']}" column2="description">
+	    </hftl:entityPopup>
+	    
+	    <hftl:entityPopup id="discountAccountingPopup" header="#{messages['defaultArticleConfiguration.discountAccounting']}" updateField=":providerFormId:tabView:discountAccountingId :providerFormId:tabView:discountAccountingId_text"
+	            selection="#{providerBean.entity.invoiceConfiguration.defaultDiscountAccountingArticle}" backingBean="#{accountingArticleBean}"
+	            searchField1Label="#{messages['businessEntity.code']}" searchField1="code" column1Label="#{messages['businessEntity.code']}" column1="code"
+	            column2Label="#{messages['businessEntity.description']}" column2="description">
+	    </hftl:entityPopup>
+	    
+	    <hftl:entityPopup id="advancedPaymentPopup" header="#{messages['defaultArticleConfiguration.advancedPayment']}" updateField=":providerFormId:tabView:advancedPaymentId :providerFormId:tabView:advancedPaymentId_text"
+	            selection="#{providerBean.entity.invoiceConfiguration.defaultAdvancedPaymentAccountingArticle}" backingBean="#{accountingArticleBean}"
+	            searchField1Label="#{messages['businessEntity.code']}" searchField1="code" column1Label="#{messages['businessEntity.code']}" column1="code"
+	            column2Label="#{messages['businessEntity.description']}" column2="description">
+	    </hftl:entityPopup>
+	    
+	    <hftl:entityPopup id="invoiceMinimumPopup" header="#{messages['defaultArticleConfiguration.invoiceMinimum']}" updateField=":providerFormId:tabView:invoiceMinimumId :providerFormId:tabView:invoiceMinimumId_text"
+	            selection="#{providerBean.entity.invoiceConfiguration.defaultInvoiceMinimumAccountingArticle}" backingBean="#{accountingArticleBean}"
+	            searchField1Label="#{messages['businessEntity.code']}" searchField1="code" column1Label="#{messages['businessEntity.code']}" column1="code"
+	            column2Label="#{messages['businessEntity.description']}" column2="description">
+	    </hftl:entityPopup>
+	    
+	    <hftl:entityPopup id="invoiceSubCategoryPopup" header="#{messages['defaultArticleConfiguration.invoiceSubCategory']}" updateField=":providerFormId:tabView:invoiceSubCategoryId :providerFormId:tabView:invoiceSubCategoryId_text"
+	            selection="#{providerBean.entity.invoiceConfiguration.defaultInvoiceSubCategory}" backingBean="#{invoiceSubCategoryBean}"
+	            searchField1Label="#{messages['businessEntity.code']}" searchField1="code" column1Label="#{messages['businessEntity.code']}" column1="code"
+	            column2Label="#{messages['businessEntity.description']}" column2="description">
+	    </hftl:entityPopup>
+
+        <hftl:formPanel formId="providerFormId" ajaxSubmit="true" submitPartialProcess=":providerFormId:tabView" label="#{messages['provider.title']}" backingBean="#{providerBean}"
+            showBackButton="false" showDeleteButton="false">
+            <p:tabView id="tabView" activeIndex="#{providerBean.activeTab}">
+
+                <p:tab title="#{messages['customer.tab.information']}">
+                    <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" />
+
+                    <hftl:formField label="#{messages['businessEntity.description']}" field="description" id="description" componentWidth="50" />
+					<hftl:formField label="#{messages['provider.enterprise']}" field="entreprise" id="enterprise" />
+                    <hftl:formField label="#{messages['provider.cdr.deduplicationKeyEL']}" field="cdrDeduplicationKeyEL" id="cdrDeduplicationKeyEL" />
+                    <!-- <hftl:formField id="languageSelectedId" label="#{messages['tradingLanguage.languageCode']}" field="language" valueLabelField="languageCode"
+								popup="true" popupId="languagePopup" required="true" /> -->
+
+
+                    <hftl:formField label="#{messages['provider.rounding']}" field="rounding" id="rounding" newLine="true" />
+                    <hftl:formField label="#{messages['provider.rounding.mode']}" field="roundingMode" id="roundingMode"  />
+                    
+                    <hftl:formField label="#{messages['provider.invoice.rounding']}" field="invoiceRounding" maxValue="4" id="invoiceRounding"  />
+                    <hftl:formField label="#{messages['provider.invoice.rounding.mode']}" field="invoiceRoundingMode" id="invoiceRoundingMode"  />
+
+                    <hftl:formField label="#{messages['provider.prepaidReservationExpirationDelayinMillisec']}" field="prepaidReservationExpirationDelayinMillisec"
+                        id="prepaidReservationExpirationDelayinMillisec" newLine="true" />
+
+                    <!-- <hftl:formField label="#{messages['provider.amountValidation']}"
+                                field="amountValidation" id="amountValidation"/> -->
+
+                    <hftl:formField label="#{messages['provider.discountAccountingCode']}" field="discountAccountingCode" id="discountAccountingCode" />
+
+                    <hftl:formField label="#{messages['provider.levelDuplication']}" field="levelDuplication" id="levelDuplication" />
+
+                    <hftl:formField label="#{messages['provider.email']}" field="email" id="email" />
+
+					<hftl:formField label="#{messages['provider.recognizeRevenue']}" field="recognizeRevenue" id="recognizeRevenue" />
+					<hftl:formField label="#{messages['provider.activateCascadingDiscounts']}" field="activateCascadingDiscounts" id="activateCascadingDiscounts" />
+					
+					<hftl:formField label="#{messages['provider.paymentMethods']}" field="paymentMethods" listType="pickUpList" valueLabelField="label" dualListModel="#{providerBean.paymentMethodsModel}" newLine="true"/>
+                  
+                    <p:fieldset legend="#{messages['provider.bankCoordinates.title']}" styleClass="clearLeft">
+                    
+                        <hftl:formField label="#{messages['bankCoordinates.bic']}" field="bankCoordinates" childField="bic" size="15" newLine="true" />
+                        <hftl:formField label="#{messages['bankCoordinates.iban']}" field="bankCoordinates" childField="iban" size="41" />
+                        <hftl:formField label="#{messages['bankCoordinates.ics']}" field="bankCoordinates" childField="ics" size="42" />
+                        
+                        <hftl:formField label="#{messages['bankCoordinates.branchCode']}" field="bankCoordinates" childField="branchCode" size="5" />
+                        <hftl:formField label="#{messages['bankCoordinates.accountNumber']}" field="bankCoordinates" childField="accountNumber" size="11" />
+                        <hftl:formField label="#{messages['bankCoordinates.bankCode']}" field="bankCoordinates" childField="bankCode" size="5" />
+                        <hftl:formField label="#{messages['bankCoordinates.issuerName']}" field="bankCoordinates" childField="issuerName" size="50" />
+                                                
+                    </p:fieldset>
+                    <p:fieldset legend="#{messages['provider.invoiceConfiguration.title']}" styleClass="clearLeft">
+                        <hftl:formField label="#{messages['invoiceConfiguration.displaySubscriptions']}" field="invoiceConfiguration" childField="displaySubscriptions"
+                            id="displaySubscriptions" />
+
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayOffers']}" field="invoiceConfiguration" childField="displayOffers" id="displayOffers" />
+
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayServices']}" field="invoiceConfiguration" childField="displayServices" id="displayServices" />
+
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayPricePlans']}" field="invoiceConfiguration" childField="displayPricePlans"
+                            id="displayPricePlans" />
+
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayEdrs']}" field="invoiceConfiguration" childField="displayEdrs" id="displayEdrs" />
+
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayFreeTransacInInvoice']}" field="displayFreeTransacInInvoice" id="displayFreeTx" />
+
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayProvider']}" field="invoiceConfiguration" childField="displayProvider" id="displayProvider" />
+
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayDetail']}" field="invoiceConfiguration" childField="displayDetail" id="displayDetail" />
+
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayCfAsXML']}" field="invoiceConfiguration" childField="displayCfAsXML" id="displayCfAsXML" />
+                                                
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayBillingCycle']}" field="invoiceConfiguration" childField="displayBillingCycle" id="displayBillingCycle" />
+
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayOrders']}" field="invoiceConfiguration" childField="displayOrders" id="displayOrders" />
+                        
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayWalletOperations']}" field="invoiceConfiguration" childField="displayWalletOperations" id="displayWalletOperations" />
+                        
+                        <hftl:formField label="#{messages['invoiceConfiguration.currentInvoiceNb']}" field="invoiceConfiguration" childField="currentInvoiceNb" id="currentInvoiceNb" />
+
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayUserAccountHierarchy']}" field="invoiceConfiguration" childField="displayUserAccountHierarchy" id="displayUserAccountHierarchy" />
+
+                        <hftl:formField label="#{messages['invoiceConfiguration.displayTaxDetails']}" field="invoiceConfiguration" childField="displayTaxDetails" id="displayTaxDetails" />
+                    </p:fieldset>
+                    
+                    <p:fieldset legend="#{messages['rumSequence.title']}" styleClass="clearLeft">
+                        <hftl:formField label="#{messages['genericSequence.prefix']}" field="rumSequence" childField="prefix" size="15" newLine="true" />
+                        <hftl:formField label="#{messages['genericSequence.sequenceSize']}" field="rumSequence" childField="sequenceSize" maxValue="20" />
+                        <hftl:formField label="#{messages['genericSequence.currentSequenceNb']}" field="rumSequence" childField="currentSequenceNb"  disabled="true" />
+                    </p:fieldset>
+                    
+                    <p:fieldset legend="#{messages['customer.number.sequence.title']}" styleClass="clearLeft">
+                        <hftl:formField label="#{messages['genericSequence.prefix']}" field="customerNoSequence" childField="prefix" size="15" newLine="true" />
+                        <hftl:formField label="#{messages['genericSequence.sequenceSize']}" field="customerNoSequence" childField="sequenceSize" maxValue="20" />
+                        <hftl:formField label="#{messages['genericSequence.currentSequenceNb']}" field="customerNoSequence" childField="currentSequenceNb"  disabled="true" />
+                    </p:fieldset>
+                    	
+                    <p:fieldset legend="#{messages['gdprConfiguration.title']}" styleClass="clearLeft">
+                    	<label title="#{messages['gdprConfiguration.note.duration']}"></label>
+                    	<hftl:formField label="#{messages['gdprConfiguration.inactiveSubscriptionLife']}" field="gdprConfiguration" childField="inactiveSubscriptionLife" />
+                    	<hftl:formField label="#{messages['gdprConfiguration.inactiveOrderLife']}" field="gdprConfiguration" childField="inactiveOrderLife" />
+                    	<hftl:formField label="#{messages['gdprConfiguration.invoiceLife']}" field="gdprConfiguration" childField="invoiceLife" />
+                    	<hftl:formField label="#{messages['gdprConfiguration.accountingLife']}" field="gdprConfiguration" childField="accountingLife" />
+                    	<hftl:formField label="#{messages['gdprConfiguration.customerProspectLife']}" field="gdprConfiguration" childField="customerProspectLife" />
+                    	<hftl:formField label="#{messages['gdprConfiguration.aoCheckUnpaidLife']}" field="gdprConfiguration" childField="aoCheckUnpaidLife" />
+                    	
+                    	<hftl:formField newLine="true" label="#{messages['gdprConfiguration.job.deleteSubscription']}" field="gdprConfiguration" childField="deleteSubscription" />
+                    	<hftl:formField label="#{messages['gdprConfiguration.job.deleteOrder']}" field="gdprConfiguration" childField="deleteOrder" />
+                    	<hftl:formField label="#{messages['gdprConfiguration.job.deleteInvoice']}" field="gdprConfiguration" childField="deleteInvoice" />
+                    	<hftl:formField label="#{messages['gdprConfiguration.job.deleteAccounting']}" field="gdprConfiguration" childField="deleteAccounting" />
+                    	<hftl:formField label="#{messages['gdprConfiguration.job.deleteCustomerProspect']}" field="gdprConfiguration" childField="deleteCustomerProspect" />
+                    	<hftl:formField label="#{messages['gdprConfiguration.job.deleteAoCheckUnpaid']}" field="gdprConfiguration" childField="deleteAoCheckUnpaidLife" />
+                    </p:fieldset>
+                    <p:fieldset legend="#{messages['defaultArticleConfiguration.title']}" styleClass="clearLeft">
+                    
+	                    <hftl:formField id="invoiceSubCategoryId" label="#{messages['defaultArticleConfiguration.invoiceSubCategory']}" 
+						                popup="true" required="true" popupId="invoiceSubCategoryPopup" valueLabelField="code" field="invoiceConfiguration" childField="defaultInvoiceSubCategory">
+						</hftl:formField>
+	                    
+	                    <hftl:formField id="genericAccountingId" label="#{messages['defaultArticleConfiguration.genericAccounting']}" 
+						                popup="true" required="true" popupId="genericAccountingPopup" valueLabelField="code" field="invoiceConfiguration" childField="defaultGenericAccountingArticle">
+						</hftl:formField>
+						
+						<hftl:formField id="discountAccountingId" label="#{messages['defaultArticleConfiguration.discountAccounting']}" 
+						                popup="true" required="true" popupId="discountAccountingPopup" valueLabelField="code" field="invoiceConfiguration" childField="defaultDiscountAccountingArticle">
+						</hftl:formField>
+						
+						<hftl:formField id="advancedPaymentId" label="#{messages['defaultArticleConfiguration.advancedPayment']}" 
+						                popup="true" required="true" popupId="advancedPaymentPopup" valueLabelField="code" field="invoiceConfiguration" childField="defaultAdvancedPaymentAccountingArticle">
+						</hftl:formField>
+						
+						<hftl:formField id="invoiceMinimumId" label="#{messages['defaultArticleConfiguration.invoiceMinimum']}" 
+						                popup="true" required="true" popupId="invoiceMinimumPopup" valueLabelField="code" field="invoiceConfiguration" childField="defaultInvoiceMinimumAccountingArticle">
+						</hftl:formField>
+					</p:fieldset>
+					
+                </p:tab>
+
+                <hftl:customFields backingBean="#{providerBean}" messagesId=":providerFormId:messages" prefix="kuu"/>
+
+            </p:tabView>
+        </hftl:formPanel>
+    </ui:define>
+</ui:composition>

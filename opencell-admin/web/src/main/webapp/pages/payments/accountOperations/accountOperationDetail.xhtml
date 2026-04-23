@@ -1,0 +1,49 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:hftl="http://hftl.org"
+	xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
+
+    <ui:define name="metadata">
+    	<f:metadata>
+    		<f:viewParam name="customerAccountId" value="#{customerAccountBean.objectId}" />
+    		<f:viewParam name="customerId" value="#{customerBean.objectId}" />
+        <f:viewParam name="objectId" value="#{otherCreditAndChargeBean.objectId}" />
+        <f:viewParam name="tab" value="#{otherCreditAndChargeBean.activeTab}" />
+    	</f:metadata>
+    </ui:define>
+
+	<ui:define name="body">
+	
+		<hftl:formPanel label="#{messages['accountOperation.form']}" backingBean="#{otherCreditAndChargeBean}" formId="accountOpFormId"
+				killConversationOnSave="#{otherCreditAndChargeBean.customerAccount==null}" killConversationOnBack="#{otherCreditAndChargeBean.customerAccount==null}">
+			
+			<p:tabView id="tabView" activeIndex="#{otherCreditAndChargeBean.activeTab}">
+				<p:tab title="#{messages['customer.tab.information']}">
+					<hftl:formField label="#{messages['accountOperation.customerAccount']}" field="customerAccount" valueLabelField="code" edit="false" />
+			       	<hftl:formField label="#{messages['accountOperation.transactionCategory']}" field="transactionCategory" edit="false" />	       	  
+			      	<hftl:formField label="#{messages['accountOperation.occCode']}" field="code" edit="false" />
+			      	<hftl:formField label="#{messages['accountOperation.accountCode']}" field="accountingCode" listBean="#{accountingCodeListBean}" valueLabelField="code" edit="false" />			       
+			      	<hftl:formField label="#{messages['accountOperation.occDescription']}" required="true" field="description" useConverter="false" size="50" />         						      
+		  			<hftl:formField label="#{messages['accountOperation.dueDate']}" required="true" field="dueDate" />     			
+		   			<hftl:formField label="#{messages['accountOperation.amount']}" required="true" field="amount" />		   			
+                   <h:outputText value="#{messages['accountOperation.type']}*"/>
+                    <p:selectOneMenu id="aoType" value="#{otherCreditAndChargeBean.entity.type}" required="true">
+                    	<f:selectItem itemLabel="OtherCreditAndCharge" itemValue="OCC" />
+	                    <f:selectItem itemLabel="Payment" itemValue="P" />
+	                    <f:selectItem itemLabel="Invoice" itemValue="I" />
+	                    <f:selectItem itemLabel="RejectedPayment" itemValue="R" />
+	                    <f:selectItem itemLabel="WriteOff" itemValue="W" />
+	                    <f:selectItem itemLabel="Refund" itemValue="RF" />
+	                </p:selectOneMenu>
+				</p:tab>
+   				<hftl:customFields backingBean="#{otherCreditAndChargeBean}" messagesId=":accountOpFormId:messages" />
+			</p:tabView>
+   					    			    			      									    			
+		</hftl:formPanel>
+
+	</ui:define>
+	
+</ui:composition>
+

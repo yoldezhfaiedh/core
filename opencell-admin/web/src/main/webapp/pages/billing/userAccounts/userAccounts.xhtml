@@ -1,0 +1,53 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:p="http://primefaces.org/ui"
+    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" template="/layout/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:event type="preRenderView" listener="#{userAccountListBean.preRenderView}" />
+            <f:viewParam name="parentObjectId" value="#{userAccountListBean.parentEntityId}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+        <h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.customers']}" disabled="true" />
+                <p:menuitem outcome="userAccounts" value="#{messages['menu.userAccounts']}" />
+            </p:breadCrumb>
+        </h:form>
+
+        <!-- Entity select popup. -->
+        <hftl:entityPopup id="searchBillingAccountPopup" header="#{messages['billingAccount.popup.header']}" backingBean="#{billingAccountBean}"
+            searchField1Label="#{messages['businessEntity.code']}" searchField1="code" column1Label="#{messages['businessEntity.code']}" column1="code" searchField2="description"
+            column2Label="#{messages['businessEntity.description']}" column2="description" selection="#{userAccountListBean.filters['billingAccount']}"
+            updateField=":searchForm:billingAccount">
+        </hftl:entityPopup>
+
+        <hftl:searchPanel label="#{messages['userAccount.search']}" backingBean="#{userAccountListBean}">
+            <hftl:searchField label="#{messages['businessEntity.code']}" field="code" />
+            <hftl:searchField label="#{messages['businessEntity.description']}" field="description" />
+            <hftl:searchField label="#{messages['userAccount.name']}" field="name.lastName" />
+            <hftl:searchField id="billingAccount" label="#{messages['userAccount.billingAccount']}" field="billingAccount" valueLabelField="code" popup="true"
+                popupId="searchBillingAccountPopup" />
+            <hftl:searchField label="#{messages['billingAccount.subscriptionDate']}" field="subscriptionDate" />
+            <hftl:searchField label="#{messages['billingAccount.terminationDate']}" field="terminationDate" />
+            <hftl:searchField label="#{messages['billingAccount.status']}" field="status" />
+        </hftl:searchPanel>
+
+        <hftl:dataList label="#{messages['userAccount.title']}" backingBean="#{userAccountListBean}" sortBy="code">
+            <hftl:column label="#{messages['businessEntity.code']}" field="code" useCustomIdParam="true" />
+            <hftl:column label="#{messages['businessEntity.description']}" field="description" />
+            <hftl:column label="#{messages['customerAccount.title']}" field="name.title.description"  />
+            <hftl:column label="#{messages['customerAccount.firstName']}" field="name.firstName" titleWithMessage="true" />
+            <hftl:column label="#{messages['customerAccount.lastName']}" field="name.lastName" titleWithMessage="true" />
+            <hftl:column label="#{messages['address.address1']}" field="address.address1" />
+            <hftl:column label="#{messages['billingAccount.subscriptionDate']}" field="subscriptionDate" isDate="true" />
+            <hftl:column label="#{messages['billingAccount.terminationDate']}" field="terminationDate" isDate="true" />
+            <hftl:column label="#{messages['billingAccount.status']}" sortField="status" field="status.label" isMessage="true" />
+
+            <hftl:actionsColumn useCustomIdParam="true" />
+        </hftl:dataList>
+
+    </ui:define>
+
+</ui:composition>

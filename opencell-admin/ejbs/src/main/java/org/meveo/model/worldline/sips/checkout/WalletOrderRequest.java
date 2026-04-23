@@ -1,0 +1,90 @@
+package org.meveo.model.worldline.sips.checkout;
+
+import org.meveo.model.worldline.sips.BaseRequest;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
+public class WalletOrderRequest extends BaseRequest {
+    private String amount;
+    private String currencyCode;
+    private String initialSchemeTransactionIdentifier;
+    private String merchantWalletId;
+    private String orderChannel;
+    private String paymentMeanId;
+    private String transactionReference;
+    private String paymentPattern;
+    
+    
+
+    public String getTransactionReference() {
+        return transactionReference;
+    }
+
+    public void setTransactionReference(String transactionReference) {
+        this.transactionReference = transactionReference;
+    }
+
+    public String getAmount() {
+        return amount;
+    }
+
+    public void setAmount(String amount) {
+        this.amount = amount;
+    }
+
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public void setCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
+    }
+
+    public String getMerchantWalletId() {
+        return merchantWalletId;
+    }
+
+    public void setMerchantWalletId(String merchantWalletId) {
+        this.merchantWalletId = merchantWalletId;
+    }
+
+    public String getOrderChannel() {
+        return orderChannel;
+    }
+
+    public void setOrderChannel(String orderChannel) {
+        this.orderChannel = orderChannel;
+    }
+
+    public String getPaymentMeanId() {
+        return paymentMeanId;
+    }
+
+    public void setPaymentMeanId(String paymentMeanId) {
+        this.paymentMeanId = paymentMeanId;
+    }
+
+	public String getInitialSchemeTransactionIdentifier() {
+		return initialSchemeTransactionIdentifier;
+	}
+
+	public void setInitialSchemeTransactionIdentifier(String initialSchemeTransactionIdentifier) {
+		this.initialSchemeTransactionIdentifier = initialSchemeTransactionIdentifier;
+	}
+
+	public String getPaymentPattern() {
+		return paymentPattern;
+	}
+
+	public void setPaymentPattern(String paymentPattern) {
+		this.paymentPattern = paymentPattern;
+	}
+
+
+
+
+	
+    
+}

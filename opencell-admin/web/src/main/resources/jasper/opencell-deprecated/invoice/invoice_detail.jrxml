@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.8.0.final using JasperReports Library version 6.8.0-2ed8dfabb690ff337a5797129f2cd92902b0c87b  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="invoice_detail" pageWidth="595" pageHeight="842" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="65a19249-db8f-4f97-9625-349e1a11cbe5">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="144"/>
+	<property name="ireport.y" value="192"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="InvoiceD2"/>
+	<parameter name="messagePath" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["./"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["./"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="logoPath" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["/"]]></defaultValueExpression>
+	</parameter>
+	<queryString language="xPath">
+		<![CDATA[/invoice]]>
+	</queryString>
+	<field name="countFraisLines" class="java.lang.Integer">
+		<fieldDescription><![CDATA[count(//category[@code='ICAT_FRAIS']//line)]]></fieldDescription>
+	</field>
+	<field name="countTaxLines" class="java.lang.Integer">
+		<fieldDescription><![CDATA[count(//category//line)]]></fieldDescription>
+	</field>
+	<field name="invoiceTotalAmountWithTax" class="java.lang.String">
+		<fieldDescription><![CDATA[/invoice/amount/amountWithTax]]></fieldDescription>
+	</field>
+	<field name="invoiceTotalAmountWithoutTax" class="java.lang.String">
+		<fieldDescription><![CDATA[/invoice/amount/amountWithoutTax]]></fieldDescription>
+	</field>
+	<field name="totalAmountWithTax5_5" class="java.lang.String">
+		<fieldDescription><![CDATA[/invoice/amount/taxes/tax[@code='TAX_5_5']/amountHT]]></fieldDescription>
+	</field>
+	<field name="totalAmountWithTax20" class="java.lang.String">
+		<fieldDescription><![CDATA[/invoice/amount/taxes/tax[@code='TAX_20']/amountHT]]></fieldDescription>
+	</field>
+	<field name="amountTax5_5" class="java.lang.String">
+		<fieldDescription><![CDATA[/invoice/amount/taxes/tax[@code='TAX_5_5']/amount]]></fieldDescription>
+	</field>
+	<field name="amountTax20" class="java.lang.String">
+		<fieldDescription><![CDATA[/invoice/amount/taxes/tax[@code='TAX_20']/amount]]></fieldDescription>
+	</field>
+	<field name="subscriptionCode" class="java.lang.String">
+		<fieldDescription><![CDATA[/invoice/detail/userAccounts/userAccount/subscriptions/subscription/@code]]></fieldDescription>
+	</field>
+	<field name="offerLabel" class="java.lang.String">
+		<fieldDescription><![CDATA[/invoice/detail/userAccounts/userAccount/subscriptions/subscription/@offerLabel]]></fieldDescription>
+	</field>
+	<field name="optionTarifaire" class="java.lang.String">
+		<fieldDescription><![CDATA[/invoice/detail/userAccounts/userAccount/subscriptions/subscription/customFields/customField['cf_sub_option_tarifaire']]]></fieldDescription>
+	</field>
+	<group name="1">
+		<groupHeader>
+			<band height="55">
+				<subreport isUsingCache="false" runToBottom="false">
+					<reportElement positionType="Float" isPrintRepeatedValues="false" x="1" y="0" width="508" height="52" isPrintWhenDetailOverflows="true" uuid="973ef3bd-d5d1-4db9-b2d8-1d5dd659abca"/>
+					<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).dataSource("/invoice/detail/userAccounts/userAccount/categories/category/subCategories/subCategory/line")]]></dataSourceExpression>
+					<subreportExpression><![CDATA[$P{messagePath}+"/invoice_detail_lines.jasper"]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupHeader>
+	</group>
+	<pageHeader>
+		<band height="94">
+			<frame>
+				<reportElement x="0" y="0" width="595" height="94" uuid="60f89adb-9cd3-4547-be7e-925973960157">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="3.0" lineColor="#B41D0A"/>
+				</box>
+				<frame>
+					<reportElement x="27" y="14" width="550" height="83" uuid="544934a4-efa9-41fa-8b81-134e2314d796">
+						<property name="com.jaspersoft.studio.unit.x" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<image>
+						<reportElement x="0" y="5" width="169" height="55" uuid="d97bd4bc-4ada-44ad-a449-186a874ed0a8">
+							<property name="com.jaspersoft.studio.unit.y" value="px"/>
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						</reportElement>
+						<imageExpression><![CDATA[$P{logoPath}+"Pictos/opencell.png"]]></imageExpression>
+					</image>
+					<staticText>
+						<reportElement x="5" y="34" width="149" height="23" forecolor="#013042" uuid="0a95dfea-8292-4987-88c2-6854f718e669">
+							<property name="com.jaspersoft.studio.unit.x" value="px"/>
+							<property name="com.jaspersoft.studio.unit.height" value="px"/>
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						</reportElement>
+						<textElement verticalAlignment="Top">
+							<font fontName="Arial" size="9"/>
+						</textElement>
+						<text><![CDATA[Be Smart, Be Automated]]></text>
+					</staticText>
+				</frame>
+			</frame>
+		</band>
+	</pageHeader>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+</jasperReport>
