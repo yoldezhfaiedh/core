@@ -7,7 +7,7 @@
 	<packaging>pom</packaging>
 	<version>14.3.6</version>
 	<name>Opencell Parent Project</name>
-
+Supprimer la déclaration de plugin en double
 	<modules>
 		<module>opencell-security</module>
 		<module>opencell-model</module>
