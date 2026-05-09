@@ -46,7 +46,7 @@
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 
 		<!-- used to switch dialect between postgres and oracle -->
-		<opencell.dialect>${opencell.dialect}</opencell.dialect>
+		<opencell.dialect>postgres</opencell.dialect>
 		<commons.io.version>2.11.0</commons.io.version>
 	</properties>
 
