@@ -34,7 +34,7 @@
 		<jackson.version>2.12.7</jackson.version> <!-- wildfly 26 -->
 		<dbtype>generic</dbtype>
 		<version.avalara-sdk>22.11.0</version.avalara-sdk>
-		<java.version>11</java.version>
+		<java.version>17</java.version>
 		<primefaces.version>7.0</primefaces.version>
 		<swagger.version>2.2.7</swagger.version>
 		<springfox.swagger.version>3.0.0</springfox.swagger.version>
