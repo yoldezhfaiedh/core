@@ -1072,7 +1072,7 @@
 				<db.schema>public</db.schema>
 				<db.username>meveo</db.username>
 				<db.password>meveo</db.password>
-				<opencell.dialect>portgresql.MeveoPostgreSQLDialect</opencell.dialect>
+				<opencell.dialect>postgresql.MeveoPostgreSQLDialect</opencell.dialect>
 			</properties>
 			<dependencies>
 				<!-- Dependency for liquibase plugin -->
